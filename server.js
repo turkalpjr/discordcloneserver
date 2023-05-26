@@ -101,6 +101,17 @@ const joinRoomHandler = (data, socket) => {
     //add new user to connected users array
 
     connectedUsers = [...connectedUsers, newUser];
+
+    //emit to all users which are already in this room to prepare peer connection
+
+    room.connectedUsers.forEach(user => {
+        if (user.socketId !== socket.id) {
+            const data = {
+                connUserSocketId:socket.id
+            }
+            io.to(user.socketId).emit('conn-prepare',data);
+        }
+    })
     io.to(roomId).emit('room-update', { connectedUsers: room.connectedUsers });
 };
 
@@ -115,15 +126,15 @@ const disconnectHandler = (socket) => {
         socket.leave(user.roomId);
 
         //emit an event to rest of the users which left in the room new connected users in room
-       
-       
+
+
         //close the room if amount of the users which will stay will be 0
         if (room.connectedUsers.length > 0) {
             io.to(room.id).emit('room-update', {
                 connectedUsers: room.connectedUsers,
             });
-        }else{
-            rooms=rooms.filter((r)=>r.id!==room.id);
+        } else {
+            rooms = rooms.filter((r) => r.id !== room.id);
         }
     }
 };
