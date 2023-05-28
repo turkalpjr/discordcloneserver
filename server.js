@@ -51,6 +51,12 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         disconnectHandler(socket);
     });
+    socket.on('conn-signal', data => {
+        signalingHandler(data, socket);
+    });
+    socket.on('conn-init',data=>{
+        initializeConnectionHandler(data,socket);
+    });
 })
 
 //socket.io handlers....
@@ -107,9 +113,9 @@ const joinRoomHandler = (data, socket) => {
     room.connectedUsers.forEach(user => {
         if (user.socketId !== socket.id) {
             const data = {
-                connUserSocketId:socket.id
+                connUserSocketId: socket.id
             }
-            io.to(user.socketId).emit('conn-prepare',data);
+            io.to(user.socketId).emit('conn-prepare', data);
         }
     })
     io.to(roomId).emit('room-update', { connectedUsers: room.connectedUsers });
@@ -138,6 +144,22 @@ const disconnectHandler = (socket) => {
         }
     }
 };
+
+const signalingHandler = (data, socket) => {
+    const { connUserSocketId, signal } = data;
+    const signalingData = { signal, connUserSocketId: socket.id };
+    io.to(connUserSocketId).emit('conn-signal', signalingData);
+};
+
+//information from clients which are already in room that they have prepared for incoming connection
+
+const initializeConnectionHandler= (data,socket)=>{
+    const {connUserSocketId}=data;
+    const initData= {connUserSocketId:socket.id};
+    io.to(connUserSocketId).emit('conn-init',initData);
+};
+
+
 
 server.listen(PORT, () => {
     console.log(`Server is listening on ${PORT}`);
