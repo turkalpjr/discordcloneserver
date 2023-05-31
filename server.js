@@ -37,16 +37,7 @@ app.get("/api/get-turn-credentials", (req, res) => {
 
   const client = twilio(accountSid, authToken);
 
-  res.send({ token: null });
-  try {
-    client.tokens.create().then((token) => {
-      res.send({ token });
-    });
-  } catch (err) {
-    console.log("error occurred when fetching turn server credentials");
-    console.log(err);
-    res.send({ token: null });
-  }
+ client.tokens.create().then((token) => res.send({ token }));
 });
 
 const io = require("socket.io")(server, {
